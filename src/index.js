@@ -71,7 +71,7 @@ const ADMIN_HTML = `<!doctype html>
 <div><label for="shopName">Shop name</label><input id="shopName" placeholder="Shop name" maxlength="100"></div>
 <div style="grid-column:1/-1"><label for="reviewUrl">Google Review URL</label><input id="reviewUrl" type="url" placeholder="https://g.page/r/.../review"></div>
 </div><div class="row"><button id="saveBtn">Save / Activate</button><button id="clearBtn" class="secondary">Clear</button></div><div id="formMsg" class="msg"></div></div>
-<div class="panel"><div class="top"><div><h2 style="margin:0">Card Inventory</h2><div class="muted">Permanent card URL stays the same when the shop's review link changes.</div></div><button id="refreshBtn" class="secondary">Refresh</button></div><div id="cards" class="cards"></div></div>
+<div class="panel"><div class="top"><div><h2 style="margin:0">Card Inventory</h2><div class="muted">Pre-create blank cards, print QR + program NFC once, then activate at the shop.</div></div><div class="row"><button id="generateBtn">Generate 10 Blank Cards</button><button id="refreshBtn" class="secondary">Refresh</button></div></div><div id="cards" class="cards"></div><div id="inventoryMsg" class="msg"></div></div>
 </section></main>
 <script>
 const $=id=>document.getElementById(id);let editing=false;
@@ -80,12 +80,13 @@ function msg(id,t){$(id).textContent=t}
 function clearForm(){$("cardId").disabled=false;$("cardId").value="";$("shopName").value="";$("reviewUrl").value="";$("formTitle").textContent="Add / Activate Card";editing=false}
 function showApp(){$("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");loadCards()}
 async function loadCards(){try{const data=await api("/api/cards");$("cards").replaceChildren();if(!data.cards.length){const p=document.createElement("p");p.className="muted";p.textContent="No cards yet. Add your first card above."; $("cards").append(p);return}
-for(const c of data.cards){const el=document.createElement("article");el.className="card";const head=document.createElement("div");head.className="cardhead";const id=document.createElement("strong");id.textContent=c.id;const badge=document.createElement("span");badge.className="status "+(c.active?"":"inactive");badge.textContent=c.active?"ACTIVE":"INACTIVE";head.append(id,badge);const shop=document.createElement("strong");shop.textContent=c.shopName||"Unassigned";const link=document.createElement("div");link.className="url";link.textContent=c.reviewUrl||"No review URL";const target=location.origin+"/r/"+encodeURIComponent(c.id);const qr=document.createElement("div");qr.className="qr";if(window.QRCode){new QRCode(qr,{text:target,width:150,height:150,correctLevel:QRCode.CorrectLevel.M})}else{qr.textContent="QR library not loaded";qr.className="muted"}const u=document.createElement("div");u.className="url";u.textContent=target;const actions=document.createElement("div");actions.className="actions";const edit=document.createElement("button");edit.className="secondary";edit.textContent="Edit";edit.onclick=()=>{$("cardId").value=c.id;$("cardId").disabled=true;$("shopName").value=c.shopName||"";$("reviewUrl").value=c.reviewUrl||"";$("formTitle").textContent="Edit Card";editing=true;window.scrollTo({top:0,behavior:"smooth"})};const toggle=document.createElement("button");toggle.className="secondary";toggle.textContent=c.active?"Deactivate":"Activate";toggle.onclick=async()=>{try{await api("/api/cards/"+encodeURIComponent(c.id),{method:"PATCH",body:JSON.stringify({active:!c.active})});loadCards()}catch(e){alert(e.message)}};const copy=document.createElement("button");copy.className="secondary";copy.textContent="Copy URL";copy.onclick=async()=>{await navigator.clipboard.writeText(target);copy.textContent="Copied"};const dl=document.createElement("button");dl.className="secondary";dl.textContent="Download QR";dl.onclick=()=>{const img=qr.querySelector("img");if(!img)return;const a=document.createElement("a");a.href=img.src;a.download=c.id+"-QR.png";a.click()};actions.append(edit,toggle,copy,dl);el.append(head,shop,link,qr,u,actions);$("cards").append(el)}
+for(const c of data.cards){const el=document.createElement("article");el.className="card";const head=document.createElement("div");head.className="cardhead";const id=document.createElement("strong");id.textContent=c.id;const badge=document.createElement("span");badge.className="status "+(c.active?"":"inactive");badge.textContent=c.active?"ACTIVE":(!c.reviewUrl?"UNASSIGNED":"INACTIVE");head.append(id,badge);const shop=document.createElement("strong");shop.textContent=c.shopName||"Blank card · ready to assign";const link=document.createElement("div");link.className="url";link.textContent=c.reviewUrl||"Not assigned to a shop yet";const target=location.origin+"/r/"+encodeURIComponent(c.id);const qr=document.createElement("div");qr.className="qr";if(window.QRCode){new QRCode(qr,{text:target,width:150,height:150,correctLevel:QRCode.CorrectLevel.M})}else{qr.textContent="QR library not loaded";qr.className="muted"}const u=document.createElement("div");u.className="url";u.textContent=target;const actions=document.createElement("div");actions.className="actions";const edit=document.createElement("button");edit.className="secondary";edit.textContent="Edit";edit.onclick=()=>{$("cardId").value=c.id;$("cardId").disabled=true;$("shopName").value=c.shopName||"";$("reviewUrl").value=c.reviewUrl||"";$("formTitle").textContent="Edit Card";editing=true;window.scrollTo({top:0,behavior:"smooth"})};const toggle=document.createElement("button");toggle.className="secondary";toggle.textContent=c.active?"Deactivate":"Activate";toggle.onclick=async()=>{try{await api("/api/cards/"+encodeURIComponent(c.id),{method:"PATCH",body:JSON.stringify({active:!c.active})});loadCards()}catch(e){alert(e.message)}};const copy=document.createElement("button");copy.className="secondary";copy.textContent="Copy URL";copy.onclick=async()=>{await navigator.clipboard.writeText(target);copy.textContent="Copied"};const dl=document.createElement("button");dl.className="secondary";dl.textContent="Download QR";dl.onclick=()=>{const img=qr.querySelector("img");if(!img)return;const a=document.createElement("a");a.href=img.src;a.download=c.id+"-QR.png";a.click()};actions.append(edit,toggle,copy,dl);el.append(head,shop,link,qr,u,actions);$("cards").append(el)}
 }catch(e){msg("formMsg",e.message)}}
 $("loginBtn").onclick=async()=>{try{await api("/api/login",{method:"POST",body:JSON.stringify({password:$("password").value})});showApp()}catch(e){msg("loginMsg",e.message)}};
 $("password").addEventListener("keydown",e=>{if(e.key==="Enter")$("loginBtn").click()});
 $("saveBtn").onclick=async()=>{const body={id:$("cardId").value.trim().toUpperCase(),shopName:$("shopName").value.trim(),reviewUrl:$("reviewUrl").value.trim()};try{await api("/api/cards",{method:"POST",body:JSON.stringify(body)});msg("formMsg","Card saved and activated.");clearForm();loadCards()}catch(e){msg("formMsg",e.message)}};
 $("clearBtn").onclick=clearForm;$("refreshBtn").onclick=loadCards;
+$("generateBtn").onclick=async()=>{if(!confirm("Create 10 blank cards (GR-001 onward)? Existing card IDs will be skipped."))return;try{const d=await api("/api/cards/bulk",{method:"POST",body:JSON.stringify({count:10,prefix:"GR"})});msg("inventoryMsg",d.created+" blank cards created; "+d.skipped+" existing IDs skipped.");loadCards()}catch(e){msg("inventoryMsg",e.message)}};
 $("logout").onclick=async()=>{await api("/api/logout",{method:"POST"});location.reload()};
 (async()=>{try{await api("/api/cards");showApp()}catch{}})();
 </script></body></html>`;
@@ -113,6 +114,22 @@ export default {
     if (url.pathname.startsWith("/api/")) {
       if (!await isLoggedIn(request, env)) return json({ error: "Please login first." }, 401);
       if (url.pathname === "/api/cards" && request.method === "GET") return json({ cards: await allCards(env) });
+      if (url.pathname === "/api/cards/bulk" && request.method === "POST") {
+        const body = await request.json().catch(() => ({}));
+        const count = Math.max(1, Math.min(50, Number(body.count) || 10));
+        const prefix = String(body.prefix || "GR").trim().toUpperCase();
+        if (!/^[A-Z]{2,8}$/.test(prefix)) return json({ error: "Prefix must be 2-8 letters." }, 400);
+        let created = 0, skipped = 0;
+        for (let n = 1; n <= count; n++) {
+          const id = prefix + "-" + String(n).padStart(3, "0");
+          const key = "card:" + id;
+          if (await env.CARDS.get(key)) { skipped++; continue; }
+          const now = new Date().toISOString();
+          await env.CARDS.put(key, JSON.stringify({ id, shopName: "", reviewUrl: "", active: false, status: "unassigned", createdAt: now, updatedAt: now }));
+          created++;
+        }
+        return json({ ok: true, created, skipped, cards: await allCards(env) });
+      }
       if (url.pathname === "/api/cards" && request.method === "POST") {
         const body = await request.json().catch(() => ({}));
         const id = String(body.id || "").trim().toUpperCase();
