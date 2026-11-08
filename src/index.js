@@ -101,7 +101,7 @@ const PRINT_HTML = `<!doctype html>
 <section class="panel controls"><h1>Google Review Card – Print Studio</h1><p>पहली बार अपना कार्ड डिजाइन अपलोड करें। उसके बाद QR इमेज चुनें और सीधे प्रिंट करें। डिजाइन इसी ब्राउज़र में सेव रहेगा।</p>
 <div class="row"><div><label>1. Card Design / Template Image</label><input id="template" type="file" accept="image/png,image/jpeg,image/webp"><div class="hint" id="templateStatus">PNG/JPG कार्ड डिजाइन चुनें (एक बार)</div></div>
 <div><label>2. QR Code Image</label><input id="qr" type="file" accept="image/png,image/jpeg,image/webp"><div class="hint">अपने कार्ड का QR PNG/JPG अपलोड करें</div></div></div>
-<label>QR Code का आकार</label><input id="scale" type="range" min="220" max="390" value="330">
+<label>QR Code का आकार</label><input id="scale" type="range" min="300" max="440" value="410">
 <div><button id="print">Print Card (85 × 85 mm)</button><button class="secondary" id="forget">Change Saved Template</button><a href="/" style="margin-left:8px">Admin Dashboard</a></div>
 <p class="hint">प्रिंट करने से पहले QR को मोबाइल से स्कैन करके जांचें। Print dialog में Scale = 100% और Margins = None चुनें।</p></section>
 <section class="panel"><div class="preview"><canvas id="canvas" width="1536" height="1536"></canvas></div></section>
@@ -109,7 +109,7 @@ const PRINT_HTML = `<!doctype html>
 const c=document.getElementById('canvas'),ctx=c.getContext('2d');let templateImg=null,qrImg=null;
 function draw(){if(!templateImg){ctx.fillStyle='#fff';ctx.fillRect(0,0,1536,1536);ctx.fillStyle='#24324a';ctx.font='bold 48px Arial';ctx.fillText('Upload card design to begin',330,750);return}
 ctx.clearRect(0,0,1536,1536);ctx.drawImage(templateImg,0,0,1536,1536);
-if(qrImg){const size=Number(document.getElementById('scale').value),x=430-size/2,y=1175-size/2;ctx.fillStyle='#fff';ctx.fillRect(x-14,y-14,size+28,size+28);ctx.imageSmoothingEnabled=false;ctx.drawImage(qrImg,x,y,size,size)}
+if(qrImg){const size=Number(document.getElementById('scale').value),x=409-size/2,y=1175-size/2;ctx.fillStyle='#fff';ctx.fillRect(x-14,y-14,size+28,size+28);ctx.imageSmoothingEnabled=false;ctx.drawImage(qrImg,x,y,size,size)}
 }
 function loadFile(file,cb){if(!file)return;const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{cb(im);URL.revokeObjectURL(u);draw()};im.src=u}
 document.getElementById('template').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{localStorage.setItem('grc_print_template',rd.result);document.getElementById('templateStatus').textContent='Template saved in this browser.'}catch(err){document.getElementById('templateStatus').textContent='Image too large; choose a smaller JPG.'}loadFile(f,im=>templateImg=im)};rd.readAsDataURL(f)};
