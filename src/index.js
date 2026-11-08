@@ -109,7 +109,7 @@ const PRINT_HTML = `<!doctype html>
 const c=document.getElementById('canvas'),ctx=c.getContext('2d');let templateImg=null,qrImg=null;
 function draw(){if(!templateImg){ctx.fillStyle='#fff';ctx.fillRect(0,0,1536,1536);ctx.fillStyle='#24324a';ctx.font='bold 48px Arial';ctx.fillText('Upload card design to begin',330,750);return}
 ctx.clearRect(0,0,1536,1536);ctx.drawImage(templateImg,0,0,1536,1536);
-if(qrImg){const size=Number(document.getElementById('scale').value),x=409-size/2,y=1170-size/2;ctx.fillStyle='#fff';ctx.fillRect(x-14,y-14,size+28,size+28);ctx.imageSmoothingEnabled=false;ctx.drawImage(qrImg,x,y,size,size)}
+if(qrImg){const size=Number(document.getElementById('scale').value),x=390-size/2,y=1170-size/2;ctx.fillStyle='#fff';ctx.fillRect(x-14,y-14,size+28,size+28);ctx.imageSmoothingEnabled=false;ctx.drawImage(qrImg,x,y,size,size)}
 }
 function loadFile(file,cb){if(!file)return;const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{cb(im);URL.revokeObjectURL(u);draw()};im.src=u}
 document.getElementById('template').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{localStorage.setItem('grc_print_template',rd.result);document.getElementById('templateStatus').textContent='Template saved in this browser.'}catch(err){document.getElementById('templateStatus').textContent='Image too large; choose a smaller JPG.'}loadFile(f,im=>templateImg=im)};rd.readAsDataURL(f)};
